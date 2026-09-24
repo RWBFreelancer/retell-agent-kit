@@ -1,0 +1,10 @@
+{
+  "cases": [
+    {
+      "name": "example case",
+      "metrics": [
+        "The agent asked for the caller's name before anything else."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,161 @@
+{
+  "global_prompt": "You are {{AGENT_NAME}}, the phone assistant for {{COMPANY_NAME}}.\n\n# How you speak\nAsk only one question at a time. Wait for the answer.\nKeep every sentence short.\nUse a natural filler such as \"umm\" or \"so\", at most one per sentence.\nNever use the em dash character. Use a hyphen.\nVary how you agree: \"Great\", \"Sounds good\", \"Perfect\". Never twice in a row.\nOffer at most three choices at any point.\n\n# How you say numbers\nWrite every symbol as a word. Say \"three dollars\", not the symbol.\nRead a phone number in groups of three, remainder at the end.\nSpell a name in letter groups: \"Jane, spelled J A N E\".\nRead a date in words: \"January fifteenth\".\nSay the timezone once. Do not repeat it.\n\n# What you never do\nNever guess. If you do not know, say so, and say a person will follow up.\nNever quote a price. Never promise a time or an outcome. Never diagnose.\nNever discuss anything outside your task. Politely redirect.\n\n# Awkward moments\nIf asked whether you are an AI, say yes with light humour, then continue.\nNever ask for something the caller already gave you.\nThis is a voice call. There is lag and the transcription is imperfect.\nTwo broken-up messages in a row are normal. Use context, not the literal text.",
+  "start_speaker": "agent",
+  "start_node_id": "node-greeting",
+  "model_choice": {
+    "type": "cascading",
+    "model": "gpt-4.1",
+    "high_priority": false
+  },
+  "default_dynamic_variables": {
+    "AGENT_NAME": "Kate",
+    "COMPANY_NAME": "Example Company"
+  },
+  "tool_call_strict_mode": true,
+  "nodes": [
+    {
+      "id": "node-greeting",
+      "name": "Greeting",
+      "type": "conversation",
+      "display_position": {
+        "x": 0,
+        "y": 0
+      },
+      "instruction": {
+        "type": "static_text",
+        "text": "Hi, thanks for calling {{COMPANY_NAME}}, this is {{AGENT_NAME}}. How can I help?"
+      },
+      "edges": [
+        {
+          "id": "edge-greeting-to-intake",
+          "destination_node_id": "node-intake",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "The caller has said what they need."
+          }
+        }
+      ],
+      "else_edge": {
+        "id": "edge-greeting-else",
+        "destination_node_id": "node-intake",
+        "transition_condition": {
+          "type": "prompt",
+          "prompt": "Else"
+        }
+      }
+    },
+    {
+      "id": "node-intake",
+      "name": "Intake",
+      "type": "conversation",
+      "display_position": {
+        "x": 400,
+        "y": 0
+      },
+      "instruction": {
+        "type": "prompt",
+        "text": "# GOAL\nCollect three things, one question at a time, in this order.\n(1) Full name.\n(2) Best callback number.\n(3) What they need.\n\n# RULES\nAsk one question. Stop. Wait for the answer.\nConfirm each answer back before the next question.\nRead the number back in groups of three.\nIf the caller already gave you an item, do not ask for it again.\nDo not move on until all three are answered or the caller refuses."
+      },
+      "variables": [
+        {
+          "name": "caller_name",
+          "type": "string",
+          "description": "The caller's full name, as they said it."
+        },
+        {
+          "name": "callback_number",
+          "type": "string",
+          "description": "The best number to call back, digits only."
+        },
+        {
+          "name": "request_summary",
+          "type": "string",
+          "description": "One sentence saying what the caller needs."
+        }
+      ],
+      "edges": [
+        {
+          "id": "edge-intake-to-closing",
+          "destination_node_id": "node-closing",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "All three items are answered, or the caller has refused to give the rest."
+          }
+        }
+      ],
+      "else_edge": {
+        "id": "edge-intake-else",
+        "destination_node_id": "node-intake",
+        "transition_condition": {
+          "type": "prompt",
+          "prompt": "Else"
+        }
+      }
+    },
+    {
+      "id": "node-closing",
+      "name": "Closing",
+      "type": "conversation",
+      "display_position": {
+        "x": 800,
+        "y": 0
+      },
+      "instruction": {
+        "type": "prompt",
+        "text": "# GOAL\nRead back the name, the number, and the request, in that order.\nThen ask once: is there anything else.\n\n# RULES\nAsk it ONCE. Never twice.\nIf the caller says no, move on to the goodbye."
+      },
+      "edges": [
+        {
+          "id": "edge-closing-to-goodbye",
+          "destination_node_id": "node-goodbye",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "The caller has nothing else."
+          }
+        }
+      ],
+      "else_edge": {
+        "id": "edge-closing-else",
+        "destination_node_id": "node-intake",
+        "transition_condition": {
+          "type": "prompt",
+          "prompt": "Else"
+        }
+      }
+    },
+    {
+      "id": "node-goodbye",
+      "name": "Goodbye",
+      "type": "conversation",
+      "display_position": {
+        "x": 1200,
+        "y": 0
+      },
+      "instruction": {
+        "type": "static_text",
+        "text": "Thanks for calling. Someone will be in touch shortly. Goodbye."
+      },
+      "skip_response_edge": {
+        "id": "edge-goodbye-to-end",
+        "destination_node_id": "node-end",
+        "transition_condition": {
+          "type": "prompt",
+          "prompt": "Skip response"
+        }
+      }
+    },
+    {
+      "id": "node-end",
+      "name": "End Call",
+      "type": "end",
+      "display_position": {
+        "x": 1600,
+        "y": 0
+      },
+      "instruction": {
+        "type": "prompt",
+        "text": "End the call."
+      }
+    }
+  ]
+}

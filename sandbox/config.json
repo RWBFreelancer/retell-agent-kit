@@ -1,0 +1,4 @@
+{
+  "test_models": ["gpt-4.1-mini", "gpt-4.1-nano"],
+  "max_reps_default": 3
+}

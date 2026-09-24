@@ -1,0 +1,23 @@
+{
+  "missing_fields_var": "missing_fields",
+  "question_sets": {
+    "default": [
+      {"label": "name", "sentence": "Can I get your name and a good callback number", "field": null},
+      {"label": "readback", "sentence": "Is that correct?", "field": "preferred_callback_number"},
+      {"label": "issue", "sentence": "Briefly, what's going on?", "field": "issue_summary"}
+    ]
+  },
+  "route_marker": null,
+  "closing_line": "Anything else I should include?",
+  "scenarios": {
+    "normal": [
+      "hi",
+      "caller's opening line",
+      "caller's name and number",
+      "yes that's correct",
+      "caller's issue",
+      "no that's everything",
+      "bye"
+    ]
+  }
+}
