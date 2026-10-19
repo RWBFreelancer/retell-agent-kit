@@ -23,3 +23,4 @@ One row per lesson. Read it before the situation it names.
 | [lessons-replay-blocked-by-own-guards.md](lessons-replay-blocked-by-own-guards.md) | Using `webhookreplay.py` to backfill missed calls. |
 | [lessons-after-hours-traces.md](lessons-after-hours-traces.md) | Writing a trace for after-hours or closed-business behavior. |
 | [lessons-call-path-detection.md](lessons-call-path-detection.md) | Trying to detect which phone line or forwarding path a call came through. |
+| [lessons-dashboard-publish-overwrites-api.md](lessons-dashboard-publish-overwrites-api.md) | Handing an API-written draft to someone who publishes in the dashboard. |
