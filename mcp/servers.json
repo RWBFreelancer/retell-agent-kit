@@ -1,0 +1,32 @@
+{
+  "_about": "Catalog of project MCP servers. No secrets here. tools/mcpgen.py fills {KEY} from the chosen account's KEY__ACCOUNT values in .env and writes a git-ignored .mcp.json at the kit root. Verify a URL against the vendor docs (links below) before trusting it.",
+  "retell": {
+    "docs": "https://docs.retellai.com/get-started/mcp-server",
+    "needs": ["RETELL_API_KEY"],
+    "server": {
+      "type": "http",
+      "url": "https://mcp.retellai.com",
+      "headers": { "Authorization": "Bearer {RETELL_API_KEY}" }
+    },
+    "warning": "One tool, invoke_api_endpoint, reaches every endpoint the key can, including delete and publish. Never always-allow it."
+  },
+  "n8n": {
+    "docs": "https://docs.n8n.io/advanced-ai/accessing-n8n-mcp-server/",
+    "needs": ["N8N_MCP_URL", "N8N_MCP_TOKEN"],
+    "server": {
+      "type": "http",
+      "url": "{N8N_MCP_URL}",
+      "headers": { "Authorization": "Bearer {N8N_MCP_TOKEN}" }
+    },
+    "warning": "Instance-level MCP: n8n Settings > Instance-level MCP. The token is not the REST API key. update_workflow and publish_workflow change live workflows."
+  },
+  "make": {
+    "docs": "https://developers.make.com/mcp-server",
+    "needs": ["MAKE_ZONE", "MAKE_MCP_TOKEN"],
+    "server": {
+      "type": "http",
+      "url": "https://{MAKE_ZONE}/mcp/u/{MAKE_MCP_TOKEN}/stateless"
+    },
+    "warning": "The token sits in the URL. Make profile > API access > MCP token, separate from MAKE_API_TOKEN. scenarios_run and scenarios_update act on live scenarios."
+  }
+}

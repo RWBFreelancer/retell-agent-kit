@@ -1,0 +1,25 @@
+{
+  "id": "wf2",
+  "name": "Bad workflow",
+  "nodes": [
+    { "id": "1", "name": "Start", "type": "n8n-nodes-base.start", "typeVersion": 1, "position": [0, 0], "parameters": {} },
+    { "id": "2", "name": "Call API", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [200, 0],
+      "parameters": { "headerParameters": { "parameters": [{ "name": "Authorization", "value": "Bearer abcdef1234567890" }] } } },
+    { "id": "3", "name": "Wait a bit", "type": "n8n-nodes-base.wait", "typeVersion": 1.1, "position": [400, 0], "parameters": {} },
+    { "id": "4", "name": "Run me again", "type": "n8n-nodes-base.executeWorkflow", "typeVersion": 1.2, "position": [600, 0],
+      "parameters": { "workflowId": { "__rl": true, "value": "wf2", "mode": "id" } } },
+    { "id": "5", "name": "Code", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [800, 0],
+      "parameters": { "jsCode": "const k = $env.MY_KEY; return $evaluateExpression('{{1}}');" } },
+    { "id": "6", "name": "Lonely", "type": "n8n-nodes-base.set", "typeVersion": 3.4, "position": [0, 300], "parameters": {} },
+    { "id": "7", "name": "Send mail", "type": "n8n-nodes-base.gmail", "typeVersion": 2.1, "position": [1000, 0],
+      "parameters": { "operation": "send" } }
+  ],
+  "connections": {
+    "Start": { "main": [[{ "node": "Call API", "type": "main", "index": 0 }]] },
+    "Call API": { "main": [[{ "node": "Wait a bit", "type": "main", "index": 0 }]] },
+    "Wait a bit": { "main": [[{ "node": "Call API", "type": "main", "index": 0 }, { "node": "Run me again", "type": "main", "index": 0 }]] },
+    "Run me again": { "main": [[{ "node": "Ghost", "type": "main", "index": 0 }, { "node": "Code", "type": "main", "index": 0 }]] },
+    "Code": { "main": [[{ "node": "Send mail", "type": "main", "index": 0 }]] }
+  },
+  "pinData": { "Start": [{ "json": {} }] }
+}

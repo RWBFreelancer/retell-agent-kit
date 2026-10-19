@@ -1,15 +1,32 @@
 ---
 name: integration-setup
-description: Wires an agent's post-call webhook to n8n, Make, GoHighLevel, Zapier, or HubSpot, and proves one test payload arrives. Use when connecting a new agent to its downstream system, or when a webhook target changes.
+description: Wires an agent's post-call webhook to n8n, Make, Modal, GoHighLevel, Zapier, or HubSpot, in the account the client uses, and proves one test payload arrives. Use when connecting a new agent to its downstream system, or when a webhook target changes.
 ---
 
 # Integration setup
 
 ## Step 1: confirm the target
 
-Ask which platform, and get its base URL, workflow or scenario id, and
-key from `<client>/.env.local` or the repo `.env`. See `.env.example`
-for every key name.
+Ask which platform, and which account of it this client uses. Keys live in
+the kit `.env` as `KEY__<ACCOUNT>`; pick the account for this client:
+
+```bash
+python tools/accounts.py list
+python tools/accounts.py use --client <name> n8n=<account>
+python kit/n8nkit.py ping        # or makekit.py ping, modalkit.py ping, run from <client>/
+```
+
+Then get the workflow id, scenario id, or Modal app name. See
+`.env.example` for every key name.
+
+| Platform | Receiver | Where the URL comes from |
+|---|---|---|
+| n8n | a Webhook node | the node's Production URL |
+| Make | a Custom webhook module | `python kit/makekit.py hooks` |
+| Modal | `templates/integrations/modal/retell_app.py`, copied to `<client>/integrations/modal/` | `modalkit.py deploy --apply` prints it |
+
+A receiver must check `x-retell-signature` (Retell signs with the
+workspace API key), or at least header auth. The Modal template does.
 
 ## Step 2: set the webhook on the agent
 

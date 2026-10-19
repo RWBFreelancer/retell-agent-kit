@@ -1,9 +1,24 @@
 # retell-agent-kit
 
-A public tool kit for building, testing, and safely editing Retell voice
-agents, of both types: conversation flow and single-prompt. It holds no
-client data. Client work lives in a separate private repo,
-`retell-clients`.
+A tool kit for creating, auditing, testing, and safely editing Retell voice
+agents, of both types (conversation flow and single-prompt), and the apps
+they feed: n8n, Make, Modal, and others. It holds no client data in git.
+Client work lives in a separate private repo, `retell-clients`, or in the
+git-ignored `clients/` folder here.
+
+## Accounts
+
+One `.env` at the kit root holds every account of every service, each key
+with an account suffix. A selector picks one per service:
+
+```bash
+cp .env.example .env                                   # then paste values
+python tools/accounts.py template n8n acme             # key lines for a new account
+python tools/accounts.py list                          # accounts per service, never values
+python tools/accounts.py use --client acme retell=acme n8n=acme
+```
+
+Rules: `kit/accounts.py`. MCP servers per account: `mcp/README.md`.
 
 Full rules live in [AGENTS.md](AGENTS.md).
 
@@ -27,11 +42,11 @@ client:
 git clone <your retell-clients repo> retell-clients
 cd retell-clients
 echo "/absolute/path/to/retell-agent-kit" > .kit-path
-cp ../retell-agent-kit/.env.example .env
 ```
 
-Fill `.env` with real keys. Never commit it; `.gitignore` already excludes
-it. See `.env.example` for every key this kit uses.
+Keys stay in the kit's `.env` (see Accounts above). Each client folder gets
+a `.env.local` naming its accounts, written by `tools/accounts.py use`.
+Never commit either; `.gitignore` already excludes both.
 
 ## First run
 
@@ -64,7 +79,8 @@ python tests/test_offline.py
 
 | Task | Start here |
 |---|---|
-| Build a new agent | The `start-session` skill, then `docs/routes/new-agent.md` |
+| Build a new agent | The `start-session` skill, then `docs/routes/new-agent.md`, then `create-agent` |
+| Read or change n8n, Make, or Modal | `check-integration`, `edit-integration`; tools in `kit/` |
 | Check, test, or edit an existing agent | `docs/routes/existing-agent.md` |
 | Understand the folder layout | `AGENTS.md` section 10 |
 | See every skill | `AGENTS.md` section 5 |

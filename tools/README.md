@@ -8,10 +8,25 @@ Every tool that touches a specific agent takes `--client <folder> --agent
 `<clients-repo>/<client>/agents/<slug>/AGENT.md`. Nothing here hard-codes
 an id.
 
+## Accounts and setup
+
+| Tool | Use |
+|---|---|
+| `accounts.py` | `list` accounts per service and which is active, `use --client <name> retell=<acct> ...` to write a client's choice into its `.env.local`, `template <service> <acct>` for the key lines to paste. Never prints a value |
+| `envcheck.py` | Which keys are set or missing for the active accounts. `--need KEY` exits 1 when missing |
+| `mcpgen.py` | Write a git-ignored `.mcp.json` with one MCP server per named account (`retell=acme n8n=other`). Dry run unless `--write`. Catalog: `mcp/servers.json` |
+
+## Retell: create
+
+| Tool | Use |
+|---|---|
+| `agentcreate.py` | Create a new agent: the flow or LLM plus the agent object (voice, webhook, post-call fields), read both back, write the ids into `AGENT.md`. Dry run unless `--create`. Refuses a slug that already has an agent. `--list-voices` lists voices. Settings: `templates/agent-settings.example.json` |
+
 ## Retell: read
 
 | Tool | Use |
 |---|---|
+| `flowshow.py` | Read one part of an export instead of the whole JSON: `list`, `show <node-id>` (whole node, every outgoing kind, incoming edges), `edges-to`, `grep`, `var <name>`, `global`. `--client --agent` takes the newest local export |
 | `deliverycheck.py` | Live version per phone number, `webhook_url`, `webhook_events`, recap fields, real calls. Read-only, exits 1 on failure. Run first every session and after every publish |
 | `flowpull.py` | Snapshot a flow into `exports/`. `--version N` for a specific one, `--suffix` to name it. Read-only |
 | `agentpull.py` | Snapshot agent-level settings into `agent-settings.json` and `AGENT-SETTINGS.md`. Read-only |
@@ -47,6 +62,18 @@ recorded in the client's `CHANGELOG.md`.
 Every sandbox run is billed by Retell, even on a local export. Run
 `cost-gate` first.
 
+## Connected apps (in `kit/`)
+
+Each reaches the account its selector picks (`N8N_ACCOUNT`, `MAKE_ACCOUNT`,
+`MODAL_ACCOUNT`). Snapshots go to `<client>/integrations/<platform>/` with
+`--client`, else to `results/<platform>/`, as new dated, numbered files.
+
+| Tool | Use |
+|---|---|
+| `kit/n8nkit.py` | `ping`, `workflows`, `pull`, `show <file-or-id> list\|node\|code`, `executions`, `execution <id> --node`, `lint` (offline, a port of the n8n-projects linter), `diff`, `push --file` (dry run unless `--apply`; refuses stale files and active workflows without `--live-ok`) |
+| `kit/makekit.py` | `ping`, `scenarios`, `pull`, `show`, `logs`, `hooks`, `diff`, `push --file` (same guards) |
+| `kit/modalkit.py` | `ping`, `apps`, `logs`, `secrets` (names only), `deploy`/`serve` (dry run unless `--apply`). Wraps the `modal` CLI with the selected token |
+
 ## Integration webhooks
 
 | Tool | Use |
@@ -57,7 +84,7 @@ Every sandbox run is billed by Retell, even on a local export. Run
 ## `.env` keys
 
 Never print a value. See `.env.example` at the repo root for the full
-list.
+list, and `kit/accounts.py` for the `KEY__<ACCOUNT>` convention.
 
 ## Transform contract
 

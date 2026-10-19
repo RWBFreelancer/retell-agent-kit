@@ -6,3 +6,6 @@ __pycache__/
 clients/
 *.pyc
 .DS_Store
+.mcp.json
+mcp/.generated
+mcp/accounts.local.md

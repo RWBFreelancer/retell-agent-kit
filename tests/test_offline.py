@@ -95,6 +95,49 @@ def test_sandbox_config_valid():
     assert isinstance(cfg["max_reps_default"], int)
 
 
+def test_accounts_resolve():
+    sys.path.insert(0, str(ROOT / "kit"))
+    import accounts
+    env = {"RETELL_API_KEY__ACME": "a", "RETELL_API_KEY__OTHER": "o",
+           "N8N_API_KEY__ONLY": "n", "RETELL_ACCOUNT": "other"}
+    out, picks = accounts.resolve(env)
+    assert out["RETELL_API_KEY"] == "o", "selector must promote that account"
+    assert picks["retell"] == ("other", "selected")
+    assert out["N8N_API_KEY"] == "n", "a lone account is used with no selector"
+    out, _ = accounts.resolve({"RETELL_API_KEY__ACME": "a", "RETELL_API_KEY__OTHER": "o"})
+    assert "RETELL_API_KEY" not in out, "two accounts and no selector must promote nothing"
+    try:
+        accounts.resolve({"RETELL_API_KEY__ACME": "a", "RETELL_ACCOUNT": "nope"})
+    except accounts.AccountError:
+        pass
+    else:
+        raise AssertionError("an unknown account must raise, never fall back")
+    assert "a" not in " ".join(accounts.summary({"RETELL_API_KEY__ACME": "a"})).split()
+
+
+def test_n8n_lint_fixtures():
+    r = run(["kit/n8nkit.py", "lint", "tests/fixtures/good.json"])
+    assert r.returncode == 0, r.stdout + r.stderr
+    r = run(["kit/n8nkit.py", "lint", "tests/fixtures/bad.json"])
+    assert r.returncode == 1
+    for code in ("removed-node", "infinite-loop", "hardcoded-secret", "self-call"):
+        assert code in r.stdout, code
+
+
+def test_agentcreate_refuses_placeholders():
+    r = run(["tools/agentcreate.py", "--client", "zz-demo", "--agent", "x",
+             "--flow", "templates/flow-skeleton.json",
+             "--settings", "templates/agent-settings.example.json"])
+    assert r.returncode == 1
+    assert "placeholder" in r.stdout + r.stderr
+
+
+def test_mcp_catalog_has_no_secrets():
+    cat = json.loads((ROOT / "mcp" / "servers.json").read_text(encoding="utf-8"))
+    text = json.dumps(cat)
+    assert "Bearer {" in text and "eyJ" not in text and "key_" not in text
+
+
 def main():
     check("flowlint on flow-skeleton.json", test_flowlint_skeleton)
     check("promptlint on single-prompt.md", test_promptlint_template)
@@ -105,6 +148,10 @@ def main():
     check("AGENTS.md is 200 lines or fewer", test_agents_md_line_limit)
     check(".env.example lists every key", test_env_example_has_every_key)
     check("sandbox/config.json is valid", test_sandbox_config_valid)
+    check("accounts: select, lone, ambiguous, unknown", test_accounts_resolve)
+    check("n8nkit lint on good and bad fixtures", test_n8n_lint_fixtures)
+    check("agentcreate refuses a placeholder settings file", test_agentcreate_refuses_placeholders)
+    check("mcp/servers.json holds no secrets", test_mcp_catalog_has_no_secrets)
 
     failed = 0
     for name, ok, msg in results:

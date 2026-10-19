@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(python tests/test_offline.py)",
+      "Bash(python tools/envcheck.py:*)",
+      "Bash(python tools/accounts.py list:*)",
+      "Bash(python tools/flowshow.py:*)",
+      "Bash(python tools/flowlint.py:*)",
+      "Bash(python tools/flowdiff.py:*)",
+      "Bash(python tools/mcpgen.py --list)",
+      "Bash(python kit/n8nkit.py lint:*)",
+      "Bash(python kit/n8nkit.py diff:*)",
+      "Bash(python kit/makekit.py show:*)",
+      "Bash(python kit/makekit.py diff:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "WebFetch(domain:docs.retellai.com)",
+      "WebFetch(domain:docs.n8n.io)",
+      "WebFetch(domain:developers.make.com)",
+      "WebFetch(domain:modal.com)"
+    ],
+    "ask": [
+      "mcp__claude_ai_n8n__update_workflow",
+      "mcp__claude_ai_n8n__publish_workflow",
+      "mcp__claude_ai_n8n__unpublish_workflow",
+      "mcp__claude_ai_n8n__archive_workflow",
+      "mcp__claude_ai_n8n__restore_workflow_version",
+      "mcp__claude_ai_n8n__execute_workflow",
+      "mcp__claude_ai_n8n__create_workflow_from_code",
+      "mcp__claude_ai_Make__scenarios_update",
+      "mcp__claude_ai_Make__scenarios_run",
+      "mcp__claude_ai_Make__scenarios_activate",
+      "mcp__claude_ai_Make__scenarios_deactivate",
+      "mcp__claude_ai_Make__scenarios_delete",
+      "mcp__claude_ai_Make__scenarios_create",
+      "mcp__claude_ai_Make__hooks_delete",
+      "mcp__claude_ai_Make__hooks_update",
+      "mcp__claude_ai_Gmail__send_message",
+      "mcp__claude_ai_Gmail__forward",
+      "mcp__claude_ai_Gmail__reply"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.mcp.json)",
+      "Read(./mcp/.generated)",
+      "Read(**/.env.local)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard:*)"
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 ---
 name: edit-integration
-description: Checklist for changing a client's post-call integration workflow safely - trace the data from the Retell webhook to every output, change one code node at a time, execute the new code against real payloads and edge cases before pushing, then verify from a fresh pull. Covers n8n first, with the same approach for Make, GoHighLevel, and Zapier. Use for any change to a code node, a downstream payload, recap logic, or an alert.
+description: Checklist for changing a client's post-call integration workflow safely - trace the data from the Retell webhook to every output, change one code node at a time, execute the new code against real payloads and edge cases before pushing, then verify from a fresh pull. Covers n8n, Make, and Modal (kit/n8nkit.py, kit/makekit.py, kit/modalkit.py), with the same approach for GoHighLevel and Zapier. Account-aware. Use for any change to a code node, a downstream payload, recap logic, or an alert.
 ---
 
 # Edit integration
@@ -22,7 +22,24 @@ before it ships.
 - [ ] Check disabled nodes the change could wake. A disabled alert node
   must stay disabled unless asked for.
 
-## Writing the change
+## Pick the write path
+
+| Change | Path |
+|---|---|
+| One line in one n8n code node of a live workflow | A one-off tool per change, below. Safest. |
+| Several n8n nodes, or a new or off workflow | Edit a fresh `kit/n8nkit.py pull` snapshot, then `n8nkit.py push <id> --file <edited>` |
+| A Make scenario | Edit the `blueprint` inside a fresh `kit/makekit.py pull` snapshot, then `makekit.py push <id> --file <edited>` |
+| A Modal app | Edit `<client>/integrations/modal/*.py`, `modalkit.py serve` to test, `modalkit.py deploy` |
+| Building a new n8n workflow | The n8n MCP Workflow SDK (`get_workflow_sdk_reference` first) or a JSON file, then `n8nkit.py lint` |
+
+Every path: confirm the account first (`tools/accounts.py list --client
+<name>`). Every push is a dry run until `--apply`. `push` refuses a file
+pulled before someone else's edit, and refuses an active workflow or
+scenario unless `--live-ok`. `--live-ok` needs the client's go-ahead for
+that change, like a publish. Before calling a workflow done, walk
+`docs/reference/n8n-production-checklist.md`.
+
+## Writing a one-off code-node change
 
 - [ ] One tool per change, modeled on `tools/examples/n8n_apply_example.py`. Copy it. Dry run by default, `--apply` to write.
 - [ ] **Anchor on a literal string that appears exactly once**, and assert

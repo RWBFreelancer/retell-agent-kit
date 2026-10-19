@@ -61,10 +61,16 @@ THREE RULES THAT DRIVE EVERYTHING
 
 CREDENTIALS
 
-Looked for in this order, first hit wins:
-    1. the process environment
-    2. .env in the current directory, or the nearest parent holding .git
-    3. %USERPROFILE%/.retell.env   (the global key, for one-off clients)
+Merged in this order, later wins:
+    1. %USERPROFILE%/.retell.env   (the global key, for one-off clients)
+    2. .env at the kit root        (every account, see kit/accounts.py)
+    3. .env in the current directory, or the nearest parent holding .git
+    4. .env.local in the current directory (a client's account choice)
+    5. the process environment
+
+Several accounts per service live side by side as KEY__ACCOUNT. A selector
+such as RETELL_ACCOUNT=acme promotes that account's keys to the plain
+names. See kit/accounts.py.
 
 The API key is never printed, never logged, and never written to a file by
 this module. print_env() masks it.
@@ -83,6 +89,9 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import accounts  # noqa: E402
+
 try:
     sys.stdout.reconfigure(encoding="utf-8")
 except (AttributeError, ValueError):  # older interpreter, or a redirected pipe
@@ -94,6 +103,7 @@ ENV_KEYS = (
     "ALLOW_PUBLISH",
 )
 GLOBAL_ENV = Path.home() / ".retell.env"
+KIT_ROOT = Path(__file__).resolve().parent.parent
 MODE_FILE = ".retell-mode.json"
 DEFAULT_BASE_URL = "https://api.retellai.com"
 
@@ -129,22 +139,31 @@ def _parse_env_file(path):
 
 
 def load_env(start=None):
-    """Merge the global env file, the repo .env, a client's .env.local, and
-    the process env. Later sources win.
+    """Merge the global env file, the kit .env, the repo .env, a client's
+    .env.local, and the process env. Later sources win. Then promote the
+    selected account of each service (kit/accounts.py).
 
-    Search order: %USERPROFILE%/.retell.env, then .env at the nearest
-    ancestor holding .git or .env, then .env.local in the current
-    directory (a per-client override), then the process environment.
+    Search order: %USERPROFILE%/.retell.env, then .env at the kit root,
+    then .env at the nearest ancestor holding .git or .env, then
+    .env.local in the current directory (a per-client override), then the
+    process environment.
     """
     root = project_root(start)
     env = _parse_env_file(GLOBAL_ENV)
-    env.update(_parse_env_file(root / ".env"))
+    env.update(_parse_env_file(KIT_ROOT / ".env"))
+    if root != KIT_ROOT:
+        env.update(_parse_env_file(root / ".env"))
     env.update(_parse_env_file(Path(start or Path.cwd()) / ".env.local"))
+    prefixes = tuple(accounts.SERVICES.values())
     for key, val in os.environ.items():
-        if key.startswith("RETELL_") or key in ENV_KEYS or key.endswith("_KEY") \
+        if key.startswith(prefixes) or key in ENV_KEYS or key.endswith("_KEY") \
                 or key.endswith("_TOKEN") or key.endswith("_SECRET"):
             if val:
                 env[key] = val
+    try:
+        env, _ = accounts.resolve(env)
+    except accounts.AccountError as exc:
+        raise RetellError(str(exc)) from None
     return env
 
 
@@ -152,11 +171,21 @@ def load_env(start=None):
 # client / agent resolution
 # --------------------------------------------------------------------------
 def clients_root(start=None):
-    """The retell-clients repo root: the nearest ancestor holding .kit-path."""
+    """Where client folders live, first hit wins:
+
+        1. RETELL_CLIENTS_DIR in the process environment
+        2. the nearest ancestor holding .kit-path (a separate retell-clients repo)
+        3. <kit>/clients/, when it exists (git-ignored: work inside the kit)
+        4. the project root
+    """
+    if os.environ.get("RETELL_CLIENTS_DIR"):
+        return Path(os.environ["RETELL_CLIENTS_DIR"]).resolve()
     here = Path(start or Path.cwd()).resolve()
     for d in [here, *here.parents]:
         if (d / ".kit-path").exists():
             return d
+    if (KIT_ROOT / "clients").is_dir():
+        return KIT_ROOT / "clients"
     return project_root(start)
 
 
@@ -207,6 +236,7 @@ def print_env(env=None):
     print(f"api key         : "
           f"{mask(env.get('RETELL_API_KEY')) if have_key(env) else 'MISSING (offline mode)'}")
     print(f"allow_publish   : {env.get('ALLOW_PUBLISH', 'false')}")
+    print(f"retell account  : {env.get('RETELL_ACCOUNT') or '(none selected)'}")
 
 
 # --------------------------------------------------------------------------
@@ -248,7 +278,8 @@ class RetellClient:
             raise RetellError(
                 "RETELL_API_KEY is empty. This command needs a key.\n"
                 f"Put it in {GLOBAL_ENV} or in .env at the project root, "
-                "or use an offline command instead.")
+                "or use an offline command instead."
+                + accounts.hint(self.env, "retell"))
 
     def __repr__(self):
         return f"<RetellClient base_url={self.base_url} key=***>"
@@ -358,6 +389,12 @@ class RetellClient:
 
     def delete_agent(self, agent_id):
         return self._request("DELETE", f"/delete-agent/{agent_id}")
+
+    def list_voices(self):
+        """GET /list-voices. Every voice the workspace can use, with
+        voice_id, voice_name, provider, gender, accent."""
+        out = self._request("GET", "/list-voices")
+        return out if isinstance(out, list) else (out or {}).get("items") or []
 
     def list_agents(self, limit=200):
         """POST /v2/list-agents.

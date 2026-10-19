@@ -34,25 +34,37 @@ skill asks again.
 
 ## Step 2: if they have a key, set it up
 
-Real keys live only in the **retell-clients** repo, never in the kit.
-
-- **Per client** - `<client>/.env.local` in retell-clients. Best when
-  different clients have different keys.
-- **Repo-wide** - `.env` at the retell-clients root. Best when most
-  clients share one Retell account.
-- **Global** - `%USERPROFILE%\.retell.env`. Best for one-off work outside
-  any client folder.
-
-Copy `$K/.env.example` for the shape. Fill only the keys this task needs.
+Every account of every service lives once, in `$K/.env` (git-ignored),
+with an account suffix. A client folder only says which accounts it uses.
 
 ```
-RETELL_API_KEY=key_xxxxxxxxxxxx
-RETELL_BASE_URL=https://api.retellai.com
+# $K/.env
+RETELL_API_KEY__ACME=key_xxxxxxxxxxxx
+RETELL_API_KEY__OTHER=key_yyyyyyyyyyyy
+N8N_BASE_URL__ACME=https://acme.app.n8n.cloud
+N8N_API_KEY__ACME=...
 ALLOW_PUBLISH=false
 ```
 
-Never print a key. Never write one into a file the user will commit.
-Check `.gitignore` covers `.env` and `.env.local` before writing either.
+```bash
+python $K/tools/accounts.py template retell acme      # prints the lines to paste
+python $K/tools/accounts.py list                      # names only, never values
+python $K/tools/accounts.py use --client acme retell=acme n8n=acme
+```
+
+`use` writes `RETELL_ACCOUNT=acme` and `N8N_ACCOUNT=acme` into
+`<client>/.env.local`. Rules (kit/accounts.py):
+
+- A selector naming an account with no keys is an error, never a fall-back.
+- One account defined and no selector: that one is used.
+- Several and no selector: tools refuse and name the accounts.
+- One-off override: `$env:RETELL_ACCOUNT='other'` (PowerShell) or
+  `RETELL_ACCOUNT=other python ...` (bash).
+
+The user pastes key values into `.env` themselves. Never print a key. Never
+write one into a file the user will commit. Check `.gitignore` covers
+`.env` and `.env.local` before writing either. `%USERPROFILE%\.retell.env`
+still works for a plain key outside any account.
 
 ## Step 3: verify
 
@@ -87,6 +99,7 @@ python $K/kit/retellkit.py flows
 | Set up a new client folder | `new-client` |
 | Build a single-prompt agent | `build-single-prompt` |
 | Build a conversation flow agent | `build-flow` |
+| Create the agent in Retell | `create-agent` |
 | Test or fix a single-prompt agent | `test-single-prompt` |
 | Test or fix a conversation flow | `test-flow` |
 | Change a live agent safely | `edit-agent` |
@@ -99,11 +112,15 @@ anything.
 
 ## The kit
 
-Five tools. Read the docstring at the top of each before you use it.
+Read the docstring at the top of each before you use it.
 
 | File | Does | Needs a key? |
 |---|---|---|
+| `kit/accounts.py` | Many accounts per service, the selector rules | No |
 | `kit/retellkit.py` | REST client, credential finder, mode file | Only for network commands |
+| `kit/n8nkit.py` | n8n workflows: pull, show, lint, diff, executions, push | **No** for `lint`, `diff` |
+| `kit/makekit.py` | Make scenarios: pull, show, logs, hooks, diff, push | **No** for `show`, `diff` |
+| `kit/modalkit.py` | Modal CLI for the selected account: apps, logs, deploy | Yes |
 | `kit/promptlint.py` | 27 checks on a single-prompt agent | **No** |
 | `kit/sp.py` | Single-prompt: new, pull, chat, push, cleanup | Yes, except `new` |
 | `kit/flowkit.py` | Flow: lint, pull, chat, push, cleanup | **No** for `lint` |

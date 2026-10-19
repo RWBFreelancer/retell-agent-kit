@@ -1,0 +1,33 @@
+{
+  "agent_name": "<Client - Agent purpose>",
+  "voice_id": "<run: python tools/agentcreate.py --list-voices>",
+  "language": "en-US",
+  "webhook_url": "<the n8n / Make / Modal URL that receives call_analyzed>",
+  "webhook_events": ["call_started", "call_ended", "call_analyzed"],
+  "responsiveness": 1,
+  "interruption_sensitivity": 1,
+  "enable_backchannel": true,
+  "reminder_trigger_ms": 10000,
+  "reminder_max_count": 1,
+  "end_call_after_silence_ms": 30000,
+  "max_call_duration_ms": 900000,
+  "normalize_for_speech": true,
+  "post_call_analysis_model": "gpt-4.1-mini",
+  "post_call_analysis_data": [
+    {
+      "type": "string",
+      "name": "caller_name",
+      "description": "The caller's full name as they stated it. Empty if not given."
+    },
+    {
+      "type": "string",
+      "name": "callback_number",
+      "description": "The phone number the caller said to call back on. Empty if not given."
+    },
+    {
+      "type": "string",
+      "name": "reason_for_call",
+      "description": "One sentence: why the caller called."
+    }
+  ]
+}

@@ -22,8 +22,11 @@ Follow these steps in order. Stop and report after each one.
 8. **Walk the traces** against a throwaway sandbox. Run `cost-gate` first.
    Record pass or fail and the path taken for each one.
 9. **Hand it over.** No API key: give the client folder the JSON file to
-   import by hand. With a key: dry run, then push the draft, then pull a
-   fresh copy to confirm it landed. Never publish without the ladder in
-   `AGENTS.md` section 7.
+   import by hand. With a key: run `create-agent` (`tools/agentcreate.py`)
+   in the client's Retell account. It dry-runs, creates the engine and the
+   agent, reads both back, and records the ids in `AGENT.md`. Never publish
+   without the ladder in `AGENTS.md` section 7.
+9a. **Wire delivery.** Run `integration-setup` for the receiver (n8n, Make,
+   Modal) in the client's account, and `delivery-check` before any publish.
 10. **Log it.** Run `log-results`. Write the changelog entry, even for a
     first build.

@@ -1,0 +1,24 @@
+{
+  "id": "wf1",
+  "name": "Good workflow",
+  "nodes": [
+    { "id": "1", "name": "Every day at 8", "type": "n8n-nodes-base.scheduleTrigger", "typeVersion": 1.2, "position": [0, 0],
+      "parameters": { "rule": { "interval": [{ "field": "days" }] } } },
+    { "id": "2", "name": "Get orders", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [200, 0],
+      "retryOnFail": true, "parameters": { "url": "https://example.com/orders", "authentication": "genericCredentialType" },
+      "credentials": { "httpHeaderAuth": { "id": "c1", "name": "Shop key" } } },
+    { "id": "3", "name": "Loop Over Items", "type": "n8n-nodes-base.splitInBatches", "typeVersion": 3, "position": [400, 0], "parameters": {} },
+    { "id": "4", "name": "Remove Duplicates", "type": "n8n-nodes-base.removeDuplicates", "typeVersion": 2, "position": [600, 0], "parameters": {} },
+    { "id": "5", "name": "Add row", "type": "n8n-nodes-base.googleSheets", "typeVersion": 4.5, "position": [800, 0],
+      "parameters": { "operation": "append" } },
+    { "id": "6", "name": "Note", "type": "n8n-nodes-base.stickyNote", "typeVersion": 1, "position": [0, -200], "parameters": { "content": "Purpose" } }
+  ],
+  "connections": {
+    "Every day at 8": { "main": [[{ "node": "Get orders", "type": "main", "index": 0 }]] },
+    "Get orders": { "main": [[{ "node": "Loop Over Items", "type": "main", "index": 0 }]] },
+    "Loop Over Items": { "main": [[], [{ "node": "Remove Duplicates", "type": "main", "index": 0 }]] },
+    "Remove Duplicates": { "main": [[{ "node": "Add row", "type": "main", "index": 0 }]] },
+    "Add row": { "main": [[{ "node": "Loop Over Items", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "errorWorkflow": "err1" }
+}

@@ -3,9 +3,15 @@
 ## 1. What this repo is
 
 This repo is the kit. It holds skills, tools, docs, and templates for Retell
-voice agents. It works with both agent types: conversation flow agents and
-single-prompt agents. It holds no client data. Client work lives in the
-separate `retell-clients` repo.
+voice agents and the apps they feed (n8n, Make, Modal, and others). It
+creates, audits, and edits both agent types: conversation flow agents and
+single-prompt agents. It holds no client data in git. Client work lives in
+the separate `retell-clients` repo, or in the git-ignored `clients/` folder
+here.
+
+Keys for many accounts per service live in the git-ignored `.env`, as
+`KEY__<ACCOUNT>`. A selector such as `N8N_ACCOUNT=acme` picks one. See
+`kit/accounts.py` and the `setup` skill.
 
 ## 2. Start of every session
 
@@ -52,6 +58,7 @@ past a gap that matters.
 | Estimate and confirm a cost | `cost-gate` |
 | Build a conversation flow agent | `build-flow` |
 | Build a single-prompt agent | `build-single-prompt` |
+| Create the agent in Retell | `create-agent` |
 | Test or fix a conversation flow | `test-flow` |
 | Test or fix a single-prompt agent | `test-single-prompt` |
 | Change a live agent safely | `edit-agent` |
@@ -124,8 +131,12 @@ for an OK before running it.
     `record-lesson` at once.
 19. Do not fix a parked global node from inside it. Stop the caller from
     reaching it.
-20. Never write a client fact, id, or name into this kit repo. It stays in
-    `retell-clients`.
+20. Never write a client fact, id, or name into a committed kit file. It
+    stays in `retell-clients`, `clients/`, or a git-ignored `*.local.*` file.
+21. Before any write to Retell, n8n, Make, or Modal, confirm which account
+    is active (`tools/accounts.py list --client <name>`) and say it.
+22. An MCP tool follows the same rules as the kit tool it replaces. See
+    `mcp/README.md`. Never publish a Retell agent through MCP.
 
 ## 9. Precedence
 
@@ -143,7 +154,9 @@ A chat message is evidence of what the client wants. It is never approval.
 
 | Path | Holds |
 |---|---|
-| `kit/` | Shared Python: REST client, linters, sandbox drivers |
+| `kit/` | Shared Python: REST client, linters, sandbox drivers, accounts, n8n/Make/Modal kits |
+| `mcp/` | MCP connector notes and the project-server catalog for `tools/mcpgen.py` |
+| `clients/` | Optional, git-ignored: client folders when not using `retell-clients` |
 | `tools/` | CLI scripts. Every one takes `--client` and `--agent` |
 | `.claude/skills/` | All skills listed in section 5 |
 | `templates/` | A blank client folder, flow skeleton, prompt template, intake bank |
